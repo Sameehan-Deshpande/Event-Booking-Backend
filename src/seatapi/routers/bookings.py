@@ -38,6 +38,11 @@ def cancel_booking(session:SessionDep,booking_id:int):
     if not ticket:
         raise HTTPException(status_code=400,detail="No ticket found")
     ticket.cancelled=True
+    event_id=ticket.event_id
+    event=session.get(Events,event_id)
+    if not event:
+        raise HTTPException(status_code=404)
+    event.available_seats+=1
     session.delete(ticket)
     session.commit()
     return ticket
