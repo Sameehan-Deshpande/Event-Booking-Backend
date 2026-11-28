@@ -1,0 +1,1140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>StagePass — Event &amp; Seat Reservations</title>
+  <style>
+    :root {
+      --bg: #f6f7f9;
+      --surface: #ffffff;
+      --surface-subtle: #f1f3f6;
+      --text: #14181f;
+      --muted: #5c6573;
+      --border: #e2e6ec;
+      --accent: #1e40af;
+      --accent-hover: #17338c;
+      --accent-soft: #eef2ff;
+      --success-bg: #ecfdf3;
+      --success-text: #067647;
+      --warn-bg: #fffbeb;
+      --warn-text: #b54708;
+      --danger-bg: #fef2f2;
+      --danger-text: #b42318;
+      --radius: 10px;
+      --shadow: 0 1px 3px rgba(16, 24, 40, 0.06);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+
+    /* Top Navigation */
+    .topbar {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 20;
+    }
+
+    .topbar-inner {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 0 20px;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 1.1rem;
+      letter-spacing: -0.02em;
+      cursor: pointer;
+    }
+
+    .brand-mark {
+      width: 30px;
+      height: 30px;
+      border-radius: 8px;
+      background: var(--accent);
+      color: #fff;
+      display: grid;
+      place-items: center;
+      font-size: 0.9rem;
+      font-weight: 700;
+    }
+
+    .nav-tabs {
+      display: flex;
+      gap: 4px;
+    }
+
+    .nav-tab {
+      background: transparent;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 0.92rem;
+      font-weight: 500;
+      color: var(--muted);
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .nav-tab:hover {
+      background: var(--surface-subtle);
+      color: var(--text);
+    }
+
+    .nav-tab.active {
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .user-pill {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.88rem;
+    }
+
+    .role-badge {
+      padding: 3px 9px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      background: var(--surface-subtle);
+      color: var(--muted);
+    }
+
+    .role-badge.admin {
+      background: var(--accent-soft);
+      color: var(--accent);
+    }
+
+    /* Main Layout */
+    .container {
+      max-width: 1120px;
+      margin: 28px auto;
+      padding: 0 20px 64px;
+    }
+
+    .page-header {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-bottom: 22px;
+    }
+
+    .page-header h1 {
+      margin: 0;
+      font-size: 1.55rem;
+      letter-spacing: -0.02em;
+    }
+
+    .page-header p {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    /* Toast Banner */
+    .toast-wrap {
+      position: fixed;
+      right: 20px;
+      bottom: 20px;
+      z-index: 50;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-width: 380px;
+    }
+
+    .toast {
+      background: var(--text);
+      color: #fff;
+      padding: 12px 16px;
+      border-radius: 10px;
+      font-size: 0.88rem;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.18);
+    }
+
+    .toast.success {
+      background: #065f46;
+    }
+
+    .toast.error {
+      background: #991b1b;
+    }
+
+    /* Cards & Grids */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 20px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+      gap: 18px;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 20px;
+    }
+
+    /* Controls */
+    .toolbar {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+
+    input, select {
+      height: 40px;
+      padding: 0 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+      color: var(--text);
+      font-size: 0.92rem;
+    }
+
+    input:focus, select:focus {
+      outline: 2px solid rgba(30, 64, 175, 0.25);
+      border-color: var(--accent);
+    }
+
+    .btn {
+      height: 40px;
+      padding: 0 15px;
+      border-radius: 8px;
+      border: 1px solid transparent;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: background 0.15s, border-color 0.15s;
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: var(--accent-hover);
+    }
+
+    .btn-secondary {
+      background: var(--surface);
+      border-color: var(--border);
+      color: var(--text);
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+      background: var(--surface-subtle);
+    }
+
+    .btn-danger {
+      background: var(--danger-bg);
+      color: var(--danger-text);
+      border-color: #fecaca;
+    }
+
+    .btn-danger:hover:not(:disabled) {
+      background: #fee2e2;
+    }
+
+    .btn-sm {
+      height: 34px;
+      padding: 0 12px;
+      font-size: 0.84rem;
+    }
+
+    /* Event Cards */
+    .event-card {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .category-pill {
+      display: inline-block;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      padding: 3px 8px;
+      border-radius: 6px;
+      background: var(--surface-subtle);
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .event-title {
+      margin: 0 0 6px;
+      font-size: 1.12rem;
+    }
+
+    .event-meta {
+      color: var(--muted);
+      font-size: 0.88rem;
+    }
+
+    .seat-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+      font-size: 0.88rem;
+    }
+
+    .seats-pill {
+      font-weight: 600;
+      padding: 3px 9px;
+      border-radius: 999px;
+      background: var(--success-bg);
+      color: var(--success-text);
+    }
+
+    .seats-pill.low {
+      background: var(--warn-bg);
+      color: var(--warn-text);
+    }
+
+    .seats-pill.sold-out {
+      background: var(--danger-bg);
+      color: var(--danger-text);
+    }
+
+    /* Auth Gate */
+    .auth-shell {
+      max-width: 440px;
+      margin: 40px auto;
+    }
+
+    .auth-tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      background: var(--surface-subtle);
+      padding: 4px;
+      border-radius: 9px;
+      margin-bottom: 20px;
+    }
+
+    .auth-tab {
+      border: none;
+      background: transparent;
+      padding: 8px;
+      border-radius: 7px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: var(--muted);
+      cursor: pointer;
+    }
+
+    .auth-tab.active {
+      background: var(--surface);
+      color: var(--text);
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 14px;
+    }
+
+    .field label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    /* Tables */
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+
+    th, td {
+      text-align: left;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    th {
+      color: var(--muted);
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      background: var(--surface-subtle);
+    }
+
+    .status-tag {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 600;
+    }
+
+    .status-active {
+      background: var(--success-bg);
+      color: var(--success-text);
+    }
+
+    .status-cancelled {
+      background: var(--surface-subtle);
+      color: var(--muted);
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 44px 20px;
+      color: var(--muted);
+    }
+
+    .hidden {
+      display: none !important;
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand" onclick="switchTab('events')">
+        <span class="brand-mark">S</span>
+        <span>StagePass</span>
+      </div>
+
+      <nav class="nav-tabs" id="mainNav">
+        <button class="nav-tab active" data-tab="events" onclick="switchTab('events')">Events</button>
+        <button class="nav-tab" data-tab="bookings" onclick="switchTab('bookings')">My Bookings</button>
+        <button class="nav-tab" data-tab="profile" onclick="switchTab('profile')">Profile</button>
+        <button class="nav-tab hidden" id="adminNavTab" data-tab="admin" onclick="switchTab('admin')">Manage Events</button>
+      </nav>
+
+      <div class="user-pill" id="userHeaderBox">
+        <span id="headerMemberName" style="font-weight: 600;"></span>
+        <span id="headerRoleBadge" class="role-badge"></span>
+        <button class="btn btn-secondary btn-sm" id="logoutBtn" onclick="logout()">Sign out</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- Auth View -->
+    <section id="authSection" class="auth-shell">
+      <div class="card">
+        <h2 style="margin: 0 0 4px;">Welcome to StagePass</h2>
+        <p style="margin: 0 0 18px; color: var(--muted); font-size: 0.9rem;">
+          Sign in or create an account to browse events and reserve seats.
+        </p>
+
+        <div class="auth-tabs">
+          <button class="auth-tab active" id="tabLogin" onclick="setAuthMode('login')">Sign In</button>
+          <button class="auth-tab" id="tabRegister" onclick="setAuthMode('register')">Create Account</button>
+        </div>
+
+        <form id="loginForm" onsubmit="handleLogin(event)">
+          <div class="field">
+            <label for="loginPhone">Phone Number</label>
+            <input id="loginPhone" type="number" placeholder="9876543210" required />
+          </div>
+          <div class="field">
+            <label for="loginPassword">Password</label>
+            <input id="loginPassword" type="password" placeholder="Enter your password" required />
+          </div>
+          <button class="btn btn-primary" style="width: 100%;" type="submit">Sign In</button>
+        </form>
+
+        <form id="registerForm" class="hidden" onsubmit="handleRegister(event)">
+          <div class="field">
+            <label for="regName">Full Name</label>
+            <input id="regName" type="text" placeholder="Ananya Rao" required />
+          </div>
+          <div class="field">
+            <label for="regPhone">Phone Number (10 digits)</label>
+            <input id="regPhone" type="number" placeholder="9876543210" required />
+          </div>
+          <div class="field">
+            <label for="regPassword">Password</label>
+            <input id="regPassword" type="password" minlength="6" placeholder="At least 6 characters" required />
+          </div>
+          <button class="btn btn-primary" style="width: 100%;" type="submit">Create Account</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- App Views -->
+    <div id="appSection" class="hidden">
+      <!-- Events Tab -->
+      <section id="view-events">
+        <div class="page-header">
+          <div>
+            <h1>Upcoming Events</h1>
+            <p>Pick an event and reserve one or more seats.</p>
+          </div>
+          <button class="btn btn-secondary" onclick="loadEvents()">Refresh</button>
+        </div>
+
+        <div class="toolbar">
+          <input id="searchInput" type="text" placeholder="Search by event name..." style="min-width: 240px;" oninput="renderEvents()" />
+          <select id="categoryFilter" onchange="renderEvents()">
+            <option value="">All Categories</option>
+            <option value="comedy">Comedy</option>
+            <option value="music">Music</option>
+            <option value="workshop">Workshop</option>
+            <option value="sports">Sports</option>
+          </select>
+        </div>
+
+        <div id="eventsGrid" class="grid-3"></div>
+      </section>
+
+      <!-- My Bookings Tab -->
+      <section id="view-bookings" class="hidden">
+        <div class="page-header">
+          <div>
+            <h1>My Bookings</h1>
+            <p>View your reserved tickets or cancel a seat to release it back to the event.</p>
+          </div>
+          <button class="btn btn-secondary" onclick="loadBookings()">Refresh</button>
+        </div>
+
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Ticket #</th>
+                  <th>Event</th>
+                  <th>Attendee</th>
+                  <th>Booked On</th>
+                  <th>Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="bookingsBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- Profile Tab -->
+      <section id="view-profile" class="hidden">
+        <div class="page-header">
+          <div>
+            <h1>Account Profile</h1>
+            <p>Keep your attendee name and contact number up to date.</p>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <h3 style="margin: 0 0 14px;">Edit Details</h3>
+            <form onsubmit="handleProfileUpdate(event)">
+              <div class="field">
+                <label for="profileName">Attendee Name</label>
+                <input id="profileName" type="text" required />
+              </div>
+              <div class="field">
+                <label for="profilePhone">Phone Number</label>
+                <input id="profilePhone" type="number" required />
+              </div>
+              <button class="btn btn-primary" type="submit">Save Changes</button>
+            </form>
+          </div>
+
+          <div class="card">
+            <h3 style="margin: 0 0 8px;">Account Actions</h3>
+            <p style="color: var(--muted); font-size: 0.9rem; margin: 0 0 16px;">
+              Accounts with active bookings or owned events cannot be removed until those are resolved.
+            </p>
+            <button class="btn btn-danger" onclick="handleDeleteAccount()">Delete My Account</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Admin Tab -->
+      <section id="view-admin" class="hidden">
+        <div class="page-header">
+          <div>
+            <h1>Event Studio</h1>
+            <p>Publish new events, adjust seat capacity, and remove finished or unbooked events.</p>
+          </div>
+        </div>
+
+        <div class="grid-2" style="margin-bottom: 24px;">
+          <div class="card">
+            <h3 style="margin: 0 0 14px;">Create Event</h3>
+            <form onsubmit="handleCreateEvent(event)">
+              <div class="field">
+                <label for="evTitle">Title</label>
+                <input id="evTitle" type="text" placeholder="Indie Acoustic Night" required />
+              </div>
+              <div class="field">
+                <label for="evVenue">Venue</label>
+                <input id="evVenue" type="text" placeholder="Jubilee Hall" required />
+              </div>
+              <div class="grid-2" style="gap: 12px;">
+                <div class="field">
+                  <label for="evCategory">Category</label>
+                  <select id="evCategory" required>
+                    <option value="music">Music</option>
+                    <option value="comedy">Comedy</option>
+                    <option value="workshop">Workshop</option>
+                    <option value="sports">Sports</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="evSeats">Total Seats</label>
+                  <input id="evSeats" type="number" min="1" value="50" required />
+                </div>
+              </div>
+              <button class="btn btn-primary" type="submit">Publish Event</button>
+            </form>
+          </div>
+
+          <div class="card">
+            <h3 style="margin: 0 0 14px;">Update Event</h3>
+            <form onsubmit="handleUpdateEvent(event)">
+              <div class="field">
+                <label for="updEventId">Select Your Event</label>
+                <select id="updEventId" required onchange="prefillEventUpdate()"></select>
+              </div>
+              <div class="field">
+                <label for="updTitle">New Title (optional)</label>
+                <input id="updTitle" type="text" placeholder="Leave blank to keep current" />
+              </div>
+              <div class="field">
+                <label for="updVenue">New Venue (optional)</label>
+                <input id="updVenue" type="text" placeholder="Leave blank to keep current" />
+              </div>
+              <div class="field">
+                <label for="updSeats">Total Seats (optional)</label>
+                <input id="updSeats" type="number" min="0" placeholder="Leave blank to keep current" />
+              </div>
+              <button class="btn btn-secondary" type="submit">Update Event</button>
+            </form>
+          </div>
+        </div>
+
+        <div class="card" style="margin-bottom: 24px;">
+          <h3 style="margin: 0 0 12px;">Events Overview</h3>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Event</th>
+                  <th>Venue</th>
+                  <th>Category</th>
+                  <th>Seats Left</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="adminEventsBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 style="margin: 0 0 12px;">Registered Members</h3>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Phone</th>
+                  <th>Role</th>
+                </tr>
+              </thead>
+              <tbody id="membersBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <div class="toast-wrap" id="toastWrap"></div>
+
+  <script>
+    const API_BASE = "http://127.0.0.1:8000";
+
+    const state = {
+      token: localStorage.getItem("seatapi_token") || null,
+      member: null,
+      events: [],
+      bookings: [],
+      members: [],
+      activeTab: "events",
+    };
+
+    function notify(message, type = "info") {
+      const wrap = document.getElementById("toastWrap");
+      const el = document.createElement("div");
+      el.className = `toast ${type}`;
+      el.textContent = message;
+      wrap.appendChild(el);
+      setTimeout(() => el.remove(), 3400);
+    }
+
+    async function api(path, options = {}) {
+      const headers = { ...(options.headers || {}) };
+      if (options.body && !headers["Content-Type"]) {
+        headers["Content-Type"] = "application/json";
+      }
+      if (state.token) {
+        headers["Authorization"] = `Bearer ${state.token}`;
+      }
+
+      const res = await fetch(`${API_BASE}${path}`, { ...options, headers });
+      const text = await res.text();
+      let data = null;
+      try {
+        data = text ? JSON.parse(text) : null;
+      } catch {
+        data = text;
+      }
+
+      if (!res.ok) {
+        if (res.status === 401 && path !== "/auth/login") {
+          logout(false);
+        }
+        const detail = typeof data?.detail === "string"
+          ? data.detail
+          : Array.isArray(data?.detail)
+          ? data.detail.map((d) => d.msg).join(", ")
+          : `Request failed (${res.status})`;
+        throw new Error(detail);
+      }
+      return data;
+    }
+
+    function setAuthMode(mode) {
+      const isLogin = mode === "login";
+      document.getElementById("tabLogin").classList.toggle("active", isLogin);
+      document.getElementById("tabRegister").classList.toggle("active", !isLogin);
+      document.getElementById("loginForm").classList.toggle("hidden", !isLogin);
+      document.getElementById("registerForm").classList.toggle("hidden", isLogin);
+    }
+
+    async function handleRegister(e) {
+      e.preventDefault();
+      try {
+        await api("/auth/register", {
+          method: "POST",
+          body: JSON.stringify({
+            attendee_name: document.getElementById("regName").value.trim(),
+            phone_number: Number(document.getElementById("regPhone").value),
+            password: document.getElementById("regPassword").value,
+          }),
+        });
+        notify("Account created! Sign in with your phone and password.", "success");
+        setAuthMode("login");
+        document.getElementById("loginPhone").value = document.getElementById("regPhone").value;
+      } catch (err) {
+        notify(err.message, "error");
+      }
+    }
+
+    async function handleLogin(e) {
+      e.preventDefault();
+      try {
+        const data = await api("/auth/login", {
+          method: "POST",
+          body: JSON.stringify({
+            phone_number: Number(document.getElementById("loginPhone").value),
+            password: document.getElementById("loginPassword").value,
+          }),
+        });
+        state.token = data.access_token;
+        localStorage.setItem("seatapi_token", state.token);
+        await bootstrapApp();
+        notify("Signed in successfully", "success");
+      } catch (err) {
+        notify(err.message, "error");
+      }
+    }
+
+    function logout(showToast = true) {
+      state.token = null;
+      state.member = null;
+      localStorage.removeItem("seatapi_token");
+      document.getElementById("appSection").classList.add("hidden");
+      document.getElementById("userHeaderBox").classList.add("hidden");
+      document.getElementById("authSection").classList.remove("hidden");
+      if (showToast) notify("Signed out");
+    }
+
+    async function bootstrapApp() {
+      if (!state.token) {
+        logout(false);
+        return;
+      }
+      try {
+        state.member = await api("/members/details");
+        document.getElementById("authSection").classList.add("hidden");
+        document.getElementById("appSection").classList.remove("hidden");
+        document.getElementById("userHeaderBox").classList.remove("hidden");
+
+        document.getElementById("headerMemberName").textContent = state.member.attendee_name;
+        const badge = document.getElementById("headerRoleBadge");
+        const isAdmin = state.member.role === "admin";
+        badge.textContent = isAdmin ? "Admin" : "Member";
+        badge.classList.toggle("admin", isAdmin);
+        document.getElementById("adminNavTab").classList.toggle("hidden", !isAdmin);
+
+        document.getElementById("profileName").value = state.member.attendee_name || "";
+        document.getElementById("profilePhone").value = state.member.phone_number || "";
+
+        await Promise.all([
+          loadEvents(),
+          loadBookings(),
+          isAdmin ? loadMembers() : Promise.resolve(),
+        ]);
+        switchTab(state.activeTab);
+      } catch {
+        logout(false);
+      }
+    }
+
+    function switchTab(tab) {
+      if (tab === "admin" && state.member?.role !== "admin") {
+        tab = "events";
+      }
+      state.activeTab = tab;
+      document.querySelectorAll(".nav-tab").forEach((btn) => {
+        btn.classList.toggle("active", btn.dataset.tab === tab);
+      });
+      ["events", "bookings", "profile", "admin"].forEach((view) => {
+        document.getElementById(`view-${view}`).classList.toggle("hidden", view !== tab);
+      });
+    }
+
+    async function loadEvents() {
+      try {
+        state.events = await api("/events/");
+        renderEvents();
+        if (state.member?.role === "admin") {
+          renderAdminEvents();
+        }
+      } catch (err) {
+        notify(err.message, "error");
+      }
+    }
+
+    function renderEvents() {
+      const q = document.getElementById("searchInput").value.trim().toLowerCase();
+      const cat = document.getElementById("categoryFilter").value;
+      const filtered = state.events.filter((ev) => {
+        const matchesTitle = !q || ev.title.toLowerCase().includes(q) || ev.venue.toLowerCase().includes(q);
+        const matchesCat = !cat || ev.category === cat;
+        return matchesTitle && matchesCat;
+      });
+
+      const grid = document.getElementById("eventsGrid");
+      if (!filtered.length) {
+        grid.innerHTML = `<div class="card empty-state" style="grid-column: 1 / -1;">No events match your filters.</div>`;
+        return;
+      }
+
+      grid.innerHTML = filtered.map((ev) => {
+        const seats = ev.available_seats ?? 0;
+        const badgeClass = seats === 0 ? "sold-out" : seats <= 3 ? "low" : "";
+        const label = seats === 0 ? "Sold out" : `${seats} of ${ev.total_seats} left`;
+        return `
+          <div class="card event-card">
+            <div>
+              <span class="category-pill">${escapeHtml(ev.category)}</span>
+              <h3 class="event-title">${escapeHtml(ev.title)}</h3>
+              <div class="event-meta">Venue: ${escapeHtml(ev.venue)}</div>
+            </div>
+            <div class="seat-row">
+              <span class="seats-pill ${badgeClass}">${label}</span>
+              <button
+                class="btn btn-primary btn-sm"
+                ${seats === 0 ? "disabled" : ""}
+                onclick="bookSeat(${ev.id})"
+              >
+                Book Seat
+              </button>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    async function bookSeat(eventId) {
+      try {
+        await api("/bookings/", {
+          method: "POST",
+          body: JSON.stringify({
+            event_id: eventId,
+            customer_id: state.member.id,
+          }),
+        });
+        notify("Seat reserved!", "success");
+        await Promise.all([loadEvents(), loadBookings()]);
+      } catch (err) {
+        notify(err.message, "error");
+      }
+    }
+
+    async function loadBookings() {
+      try {
+        state.bookings = await api("/bookings/");
+        renderBookings();
+      } catch (err) {
+        notify(err.message, "error");
+      }
+    }
+
+    function renderBookings() {
+      const tbody = document.getElementById("bookingsBody");
+      const eventMap = Object.fromEntries(state.events.map((e) => [e.id, e.title]));
+
+      if (!state.bookings.length) {
+        tbody.innerHTML = `<tr><td colspan="6" class="empty-state">You haven't booked any seats yet.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = state.bookings.map((b) => {
+        const title = eventMap[b.event_id] || `Event #${b.event_id}`;
+        const dateStr = b.booked_at ? new Date(b.booked_at).toLocaleString() : "—";
+        const isCancelled = Boolean(b.cancelled);
+        return `
+          <tr>
+            <td>#${b.id}</td>
+            <td><strong>${escapeHtml(title)}</strong></td>
+            <td>${escapeHtml(b.attendee_name)}</td>
+            <td style="color: var(--muted); font-size: 0.84rem;">${escapeHtml(dateStr)}</td>
+            <td>
+              <span class="status-tag ${isCancelled ? "status-cancelled" : "status-active"}">
+                ${isCancelled ? "Cancelled" : "Confirmed"}
+              </span>
+            </td>
+            <td>
+              <button
+                class="btn btn-danger btn-sm"
+                ${isCancelled ? "disabled" : ""}
+                onclick="cancelBooking(${b.id})"
+              >
+                Cancel
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    async function cancelBooking(bookingId) {
+      try {
+        await api(`/bookings/`, { method: "DELETE" });
+        notify("Booking cancelled and seat released", "success");
+        await Promise.all([loadBookings(), loadEvents()]);
+      } catch (err) {
+        notify(err.message, "error");
+      }
+    }
+
+    async function handleProfileUpdate(e) {
+      e.preventDefault();
+      try {
+        state.member = await api("/members/update", {
+          method: "PATCH",
+          body: JSON.stringify({
+            attendee_name: document.getElementById("profileName").value.trim(),
+            phone_number: Number(document.getElementById("profilePhone").value),
+          }),
+        });
+        document.getElementById("headerMemberName").textContent = state.member.attendee_name;
+        notify("Profile updated", "success");
+      } catch (err) {
+        notify(err.message, "error");
+      }
+    }
+
+    async function handleDeleteAccount() {
+      if (!confirm("Delete your account permanently?")) return;
+      try {
+        await api("/members/", { method: "DELETE" });
+        notify("Account deleted");
+        logout(false);
+      } catch (err) {
+        notify(err.message, "error");
+      }
+    }
+
+    function renderAdminEvents() {
+      const owned = state.events.filter((e) => e.creator_id === state.member?.id);
+      const select = document.getElementById("updEventId");
+      select.innerHTML = owned.length
+        ? owned.map((e) => `<option value="${e.id}">${escapeHtml(e.title)}</option>`).join("")
+        : `<option value="">No events created by you yet</option>`;
+      prefillEventUpdate();
+
+      const tbody = document.getElementById("adminEventsBody");
+      if (!state.events.length) {
+        tbody.innerHTML = `<tr><td colspan="5" class="empty-state">No events found.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = state.events.map((ev) => {
+        const canManage = ev.creator_id === state.member?.id;
+        return `
+          <tr>
+            <td><strong>${escapeHtml(ev.title)}</strong></td>
+            <td>${escapeHtml(ev.venue)}</td>
+            <td>${escapeHtml(ev.category)}</td>
+            <td>${ev.available_seats} / ${ev.total_seats}</td>
+            <td>
+              ${
+                canManage
+                  ? `<button class="btn btn-danger btn-sm" onclick="deleteEvent(${ev.id})">Delete</button>`
+                  : `<span style="color: var(--muted); font-size: 0.82rem;">Owned by another admin</span>`
+              }
+            </td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    function prefillEventUpdate() {
+      const id = Number(document.getElementById("updEventId").value);
+      const ev = state.events.find((x) => x.id === id);
+      document.getElementById("updTitle").value = ev?.title || "";
+      document.getElementById("updVenue").value = ev?.venue || "";
+      document.getElementById("updSeats").value = ev?.total_seats ?? "";
+    }
+
+    async function handleCreateEvent(e) {
+      e.preventDefault();
+      try {
+        await api("/events/", {
+          method: "POST",
+          body: JSON.stringify({
+            title: document.getElementById("evTitle").value.trim(),
+            venue: document.getElementById("evVenue").value.trim(),
+            category: document.getElementById("evCategory").value,
+            total_seats: Number(document.getElementById("evSeats").value),
+          }),
+        });
+        e.target.reset();
+        document.getElementById("evSeats").value = 50;
+        notify("Event published", "success");
+        await loadEvents();
+      } catch (err) {
+        notify(err.message, "error");
+      }
+    }
+
+    async function handleUpdateEvent(e) {
+      e.preventDefault();
+      const id = Number(document.getElementById("updEventId").value);
+      if (!id) return;
+
+      const payload = {};
+      const title = document.getElementById("updTitle").value.trim();
+      const venue = document.getElementById("updVenue").value.trim();
+      const seatsRaw = document.getElementById("updSeats").value;
+      if (title) payload.title = title;
+      if (venue) payload.venue = venue;
+      if (seatsRaw !== "") payload.total_seats = Number(seatsRaw);
+
+      try {
+        await api(`/events/${id}`, {
+          method: "PATCH",
+          body: JSON.stringify(payload),
+        });
+        notify("Event updated", "success");
+        await loadEvents();
+      } catch (err) {
+        notify(err.message, "error");
+      }
+    }
+
+    async function deleteEvent(eventId) {
+      if (!confirm("Delete this event?")) return;
+      try {
+        await api(`/events/${eventId}`, { method: "DELETE" });
+        notify("Event deleted", "success");
+        await loadEvents();
+      } catch (err) {
+        notify(err.message, "error");
+      }
+    }
+
+    async function loadMembers() {
+      try {
+        state.members = await api("/members/all");
+        const tbody = document.getElementById("membersBody");
+        tbody.innerHTML = state.members.map((m) => `
+          <tr>
+            <td>${escapeHtml(m.attendee_name)}</td>
+            <td>${m.phone_number}</td>
+            <td><span class="role-badge ${m.role === "admin" ? "admin" : ""}">${escapeHtml(m.role)}</span></td>
+          </tr>
+        `).join("");
+      } catch (err) {
+        notify(err.message, "error");
+      }
+    }
+
+    function escapeHtml(str) {
+      return String(str ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;");
+    }
+
+    bootstrapApp();
+  </script>
+</body>
+</html>

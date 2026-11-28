@@ -10,12 +10,11 @@ class Category(str,Enum):
     WORKSHOP="workshop"
     SPORTS="sports"
 
-class MemberCreate(BaseModel):
-    attendee_name:str=Field(min_length=2)
-    phone_number:int=Field(ge=1_000_000_000, le=9_999_999_999)
-    
-class MemberRead(MemberCreate):
+
+class MemberRead(BaseModel):
     id:int
+    attendee_name:str=Field(min_length=2)
+    phone_number:int=Field(ge=1_000_000_000, le=9_999_999_999)    
     model_config=ConfigDict(from_attributes=True)
 class EventCreate(BaseModel):
     title:str=Field(min_length=2)
@@ -48,3 +47,23 @@ class EventRead(EventCreate):
     available_seats:int
     tickets:list[BookingRead]
     model_config=ConfigDict(from_attributes=True)
+
+class MemberRegister(BaseModel):
+    attendee_name:str=Field(min_length=2)
+    phone_number:int=Field(ge=1000000000,le=9999999999)
+    password:str=Field(min_length=6)
+
+class MemberLogin(BaseModel):
+    phone_number:int=Field(ge=1000000000,le=9999999999)
+    password:str=Field(min_length=6)
+
+class MemberAuthRead(BaseModel):
+    id:int
+    attendee_name:str
+    phone_number:int
+    role:str
+    model_config=ConfigDict(from_attributes=True)
+
+class Token(BaseModel):
+    access_token:str
+    token_type:str ="bearer"
